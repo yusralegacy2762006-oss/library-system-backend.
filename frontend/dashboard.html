@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLibrary | Professional Dashboard</title>
+    <!-- Professional Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS STYLING (The Look) --- */
+        * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+        
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), 
+                        url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1350&q=80');
+            background-size: cover; background-attachment: fixed; margin: 0; color: white; min-height: 100vh;
+        }
+
+        .navbar { 
+            background: rgba(44, 62, 80, 0.95); padding: 8px 40px; 
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000; height: 60px;
+        }
+
+        .container { padding: 20px; max-width: 1100px; margin: auto; }
+
+        .header-box { 
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); 
+            padding: 15px 25px; border-radius: 12px; display: flex; 
+            justify-content: space-between; align-items: center; margin-bottom: 25px;
+        }
+
+        .search-input { 
+            padding: 8px 15px; width: 320px; border-radius: 20px; border: none; outline: none;
+            font-size: 14px; background: white; color: #333;
+        }
+
+        .btn-group-top { display: flex; gap: 10px; }
+
+        .add-btn { background: #27ae60; color: white; padding: 8px 20px; border-radius: 20px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .history-btn { background: #3498db; color: white; padding: 8px 20px; border-radius: 20px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
+        
+        .card { 
+            background: white; border-radius: 12px; overflow: hidden; color: #333; 
+            height: 460px; display: flex; flex-direction: column; position: relative;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        .book-img { width: 100%; height: 280px; object-fit: cover; background: #f8f9fa; }
+
+        .info { padding: 12px; flex-grow: 1; }
+        .info h3 { margin: 0; font-size: 16px; color: #2c3e50; }
+        .info p { margin: 5px 0; font-size: 12px; color: #7f8c8d; }
+
+        .status { position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 20px; font-size: 9px; color: white; font-weight: bold; text-transform: uppercase; }
+        .Available { background: #27ae60; } 
+        .Issued { background: #e67e22; }
+
+        .card-buttons { display: flex; border-top: 1px solid #eee; }
+        .card-buttons button { flex: 1; padding: 10px; border: none; cursor: pointer; font-weight: bold; background: white; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION -->
+    <nav class="navbar">
+        <h2> SMARTLAB</h2>
+        <div style="display: flex; align-items: center;">
+            <span id="userGreet" style="margin-right: 15px; font-size: 14px;"></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- SEARCH AND ACTIONS -->
+        <div class="header-box">
+            <input type="text" id="search" class="search-input" placeholder="🔍 Search by title or author..." onkeyup="filter()">
+            <div class="btn-group-top">
+                <button class="history-btn" onclick="window.location.href='history.html'"> My History</button>
+                <button id="adminAddBtn" class="add-btn" onclick="window.location.href='add-book.html'">+ Add Book</button>
+            </div>
+        </div>
+
+        <!-- BOOKS GRID -->
+        <div class="grid" id="bookGrid">
+            <!-- Books will be loaded here by the script -->
+        </div>
+    </div>
+
+    <script>
+        /* --- JAVASCRIPT LOGIC (The Brain) --- */
+        let allBooks = [];
+
+       
+          window.onload = async () => {
+    const name = localStorage.getItem('userName');
+    const role = localStorage.getItem('userRole'); // Get the role from browser memory
+    const token = localStorage.getItem('token');
+
+    console.log("Current user role is:", role); // This will show in F12 console
+
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    document.getElementById('userGreet').innerText = "Hi, " + name;
+
+    // FIX: Make sure the role check matches your database exactly
+    if (role === 'admin') {
+        document.getElementById('adminAddBtn').style.display = 'block'; // Show if admin
+    } else {
+        document.getElementById('adminAddBtn').style.display = 'none';  // Hide if not admin
+    }
+
+    fetchBooks();
+};
+
+        async function fetchBooks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/books/all');
+                allBooks = await response.json();
+                renderBooks(allBooks);
+            } catch (err) {
+                console.error("Error fetching books:", err);
+            }
+        }
+
+        function renderBooks(data) {
+            const grid = document.getElementById('bookGrid');
+            const role = localStorage.getItem('userRole');
+            grid.innerHTML = '';
+
+            if (data.length === 0) {
+                grid.innerHTML = "<p>No books found in the library.</p>";
+                return;
+            }
+
+            data.forEach(book => {
+                const isAvail = book.status === 'Available';
+                
+                // Check if Admin to show Delete button
+                const deleteBtn = (role === 'admin') 
+                    ? `<button style="color:red; border-left:1px solid #eee" onclick="deleteBook('${book._id}')">Delete</button>` 
+                    : '';
+
+                grid.innerHTML += `
+                    <div class="card">
+                        <div class="status ${book.status}">${book.status}</div>
+                        <img src="${book.imageUrl}" class="book-img" onerror="this.src='https://via.placeholder.com/300x400?text=No+Cover+Found'">
+                        <div class="info">
+                            <h3>${book.title}</h3>
+                            <p>By ${book.author}</p>
+                            <p style="font-size:10px; color:#aaa;">ISBN: ${book.isbn}</p>
+                        </div>
+                        <div class="card-buttons">
+                            <button style="color:#3498db" onclick="handleBorrow('${book._id}', '${isAvail ? 'Issued' : 'Available'}')">
+                                ${isAvail ? 'Borrow' : 'Return'}
+                            </button>
+                            ${deleteBtn}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function handleBorrow(bookId, newStatus) {
+            const userId = localStorage.getItem('userId');
+
+            if (newStatus === 'Issued') {
+                // BORROW ACTION
+                const res = await fetch('http://localhost:5000/api/books/borrow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookId, userId })
+                });
+                if (res.ok) {
+                    alert("✅ Book Borrowed Successfully!");
+                    fetchBooks();
+                }
+            } else {
+                // RETURN ACTION (Simply changes status back)
+                const res = await fetch(`http://localhost:5000/api/books/update/${bookId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'Available' })
+                });
+                if (res.ok) {
+                    alert("✅ Book Returned!");
+                    fetchBooks();
+                }
+            }
+        }
+
+        async function deleteBook(id) {
+            if (confirm("Are you sure you want to delete this book?")) {
+                const res = await fetch(`http://localhost:5000/api/books/delete/${id}`, { method: 'DELETE' });
+                if (res.ok) fetchBooks();
+            }
+        }
+
+        function filter() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const filtered = allBooks.filter(b => 
+                b.title.toLowerCase().includes(query) || b.author.toLowerCase().includes(query)
+            );
+            renderBooks(filtered);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

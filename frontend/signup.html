@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLibrary | Create Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), 
+                        url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* MEDIUM SIZE SIGNUP CARD */
+        .signup-card {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px 35px; /* Medium padding */
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px; /* Perfect Medium Width */
+            text-align: center;
+        }
+
+        .signup-card h2 {
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+            font-size: 22px;
+        }
+
+        .signup-card p {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        /* MEDIUM INPUT BARS */
+        .input-group {
+            text-align: left;
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #34495e;
+            margin-left: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 15px; /* Medium height bars */
+            margin-top: 4px;
+            border: 1px solid #ddd;
+            border-radius: 25px; /* Rounded pill shape to match dashboard */
+            outline: none;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: #27ae60;
+            box-shadow: 0 0 5px rgba(39, 174, 96, 0.2);
+        }
+
+        /* MEDIUM ACTION BUTTON */
+        .signup-btn {
+            width: 100%;
+            padding: 10px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        .signup-btn:hover {
+            background: #219150;
+            transform: scale(1.02);
+        }
+
+        .footer-text {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .footer-text a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="signup-card">
+        <h2>📚 Create Account</h2>
+        <p>Join the SmartLibrary community</p>
+
+        <form id="signupForm">
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" id="name" placeholder="Enter your name" required>
+            </div>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Create a password" required>
+            </div>
+            
+            <button type="submit" class="signup-btn">Sign Up</button>
+        </form>
+
+        <div class="footer-text">
+            Already have an account? <a href="login.html">Login</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert("✅ Account Created! Please login.");
+                    window.location.href = "login.html";
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+
+            } catch (error) {
+                alert("❌ Connection failed. Check your server.");
+            }
+        });
+    </script>
+</body>
+</html>
