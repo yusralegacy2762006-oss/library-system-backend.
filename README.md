@@ -1,5 +1,5 @@
 # Library Management System (Final Year Project)
-**Student Name:** [Yusra,Maria,Tayyaba]
+**Student Name:** [Yusra]
 **Tech Stack:** Node.js, Express, MongoDB, HTML/CSS/JS
 
 ## 🚀 Features
